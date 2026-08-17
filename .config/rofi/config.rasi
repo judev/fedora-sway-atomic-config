@@ -1,0 +1,24 @@
+/* rofi -- Fedora 44 ships rofi 2.0, which is the Wayland-native fork.
+ * It talks wlr-layer-shell directly: no XWayland, no GDK_BACKEND=x11 wrapper.
+ *
+ * Note the key is `modes` (rofi 2.x), not the older `modi`. */
+
+configuration {
+    modes: "drun,run,window";
+    font: "Adwaita Sans 12";
+
+    show-icons: true;
+    icon-theme: "Adwaita";
+    terminal: "foot";
+
+    drun-display-format: "{name}";
+    display-drun: "Apps";
+    display-run: "Run";
+    display-window: "Windows";
+
+    hide-scrollbar: true;
+    disable-history: false;
+    sidebar-mode: false;
+}
+
+@theme "neutral"

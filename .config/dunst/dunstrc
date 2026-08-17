@@ -1,0 +1,85 @@
+# dunst -- overrides /etc/xdg/dunst/dunstrc.
+#
+# dunst is D-Bus activated (org.knopwob.dunst.service), so it starts on the
+# first notification and needs no exec line in the sway config.
+#
+# Syntax is dunst 1.13: `offset` and `height` take (x, y) / (min, max) tuples,
+# not the older WIDTHxHEIGHT strings.
+
+[global]
+    monitor = 0
+    follow = none
+
+    width = 380
+    height = (0, 300)
+    origin = top-right
+    # Cleared the 28px waybar plus a small margin.
+    offset = (10, 38)
+
+    notification_limit = 8
+    gap_size = 6
+
+    progress_bar = true
+    progress_bar_height = 8
+    progress_bar_frame_width = 0
+    progress_bar_min_width = 150
+    progress_bar_max_width = 380
+
+    indicate_hidden = yes
+    transparency = 0
+    separator_height = 0
+    padding = 14
+    horizontal_padding = 14
+    text_icon_padding = 12
+    frame_width = 1
+    corner_radius = 4
+    sort = yes
+
+    font = Adwaita Sans 10
+    line_height = 0
+    markup = full
+    format = "<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    word_wrap = yes
+    ellipsize = middle
+
+    show_age_threshold = 60
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = no
+
+    enable_recursive_icon_lookup = true
+    icon_theme = Adwaita
+    icon_position = left
+    min_icon_size = 24
+    max_icon_size = 48
+
+    sticky_history = yes
+    history_length = 50
+
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+# Neutral dark, matched to the sway/waybar/foot palette. Colour is reserved
+# for urgency, so normal notifications stay grey.
+[urgency_low]
+    background = "#1a1a1a"
+    foreground = "#8a8a8a"
+    frame_color = "#2e2e2e"
+    timeout = 5
+
+[urgency_normal]
+    background = "#1a1a1a"
+    foreground = "#d4d4d4"
+    frame_color = "#3a3a3a"
+    timeout = 8
+
+[urgency_critical]
+    background = "#1a1a1a"
+    foreground = "#f0f0f0"
+    frame_color = "#d75f5f"
+    # Critical notifications (including the low-battery warning) stay until
+    # dismissed.
+    timeout = 0

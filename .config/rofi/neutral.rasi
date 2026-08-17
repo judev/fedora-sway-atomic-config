@@ -1,0 +1,94 @@
+/* Neutral dark rofi theme, matched to the sway/waybar/foot palette. */
+
+* {
+    bg:       #1a1a1a;
+    bg-alt:   #242424;
+    bg-sel:   #333333;
+    fg:       #d4d4d4;
+    fg-dim:   #6e6e6e;
+    fg-bright:#f0f0f0;
+    accent:   #cdcdcd;
+    urgent:   #d75f5f;
+
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    width:            640px;
+    border:           1px;
+    border-color:     @bg-sel;
+    background-color: @bg;
+    padding:          0;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    padding:  0;
+}
+
+inputbar {
+    children:         [ prompt, entry ];
+    background-color: @bg-alt;
+    padding:          10px 12px;
+    spacing:          10px;
+}
+
+prompt {
+    text-color: @fg-dim;
+}
+
+entry {
+    text-color:        @fg-bright;
+    placeholder:       "Search";
+    placeholder-color: @fg-dim;
+    cursor:            text;
+}
+
+listview {
+    lines:     10;
+    columns:   1;
+    scrollbar: false;
+    padding:   6px 0;
+    spacing:   0;
+}
+
+element {
+    padding: 7px 12px;
+    spacing: 10px;
+    cursor:  pointer;
+}
+
+element normal normal   { text-color: @fg; }
+element alternate normal{ text-color: @fg; }
+element normal urgent   { text-color: @urgent; }
+element alternate urgent{ text-color: @urgent; }
+
+element selected normal {
+    background-color: @bg-sel;
+    text-color:       @fg-bright;
+}
+
+element selected urgent {
+    background-color: @urgent;
+    text-color:       @bg;
+}
+
+element-icon {
+    size:             22px;
+    vertical-align:   0.5;
+}
+
+element-text {
+    vertical-align: 0.5;
+    text-color:     inherit;
+}
+
+message {
+    padding:          10px 12px;
+    background-color: @bg-alt;
+}
+
+textbox {
+    text-color: @fg;
+}

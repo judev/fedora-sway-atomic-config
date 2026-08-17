@@ -1,0 +1,121 @@
+/* Waybar -- neutral dark, matched to the sway border palette in
+ * ~/.config/sway/config.d/20-appearance.conf.
+ *
+ * Colour is reserved for meaning: everything is grey until the battery is
+ * actually in trouble. */
+
+* {
+  /* Adwaita Sans carries the text; Font Awesome supplies the module icons.
+   *
+   * It must be "Font Awesome 6 Free Solid", NOT "Font Awesome 6 Free". The
+   * icons waybar uses here (volume, battery, wifi, sun, bolt) exist only in
+   * the Solid face, but the bare family name resolves to Regular, which does
+   * not contain them -- so the glyphs silently render as nothing at all.
+   * Verify a codepoint with:  fc-list ':charset=f240' family style */
+  font-family: "Adwaita Sans", "Font Awesome 6 Free Solid", sans-serif;
+  font-size: 13px;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+}
+
+window#waybar {
+  background: #1a1a1a;
+  color: #d4d4d4;
+  border-bottom: 1px solid #2e2e2e;
+}
+
+/* Workspaces ------------------------------------------------------------- */
+
+#workspaces button {
+  padding: 0 10px;
+  margin: 0;
+  color: #6e6e6e;
+  background: transparent;
+  /* Reserve the underline height on every button so text does not shift
+   * by 2px when a workspace becomes focused. */
+  border-bottom: 2px solid transparent;
+}
+
+#workspaces button.visible {
+  color: #b0b0b0;
+}
+
+#workspaces button.focused {
+  color: #f0f0f0;
+  border-bottom: 2px solid #cdcdcd;
+}
+
+#workspaces button.urgent {
+  color: #1a1a1a;
+  background: #d75f5f;
+}
+
+#workspaces button:hover {
+  /* Override GTK's default hover, which is far too bright here. */
+  background: #262626;
+  color: #d4d4d4;
+}
+
+/* Centre ----------------------------------------------------------------- */
+
+#mode {
+  padding: 0 10px;
+  color: #1a1a1a;
+  background: #d7a65f;
+}
+
+#window {
+  color: #8a8a8a;
+}
+
+/* Empty title would otherwise leave the padding as a visible gap. */
+window#waybar.empty #window {
+  background: transparent;
+  padding: 0;
+}
+
+/* Right-hand modules ----------------------------------------------------- */
+
+#tray,
+#pulseaudio,
+#backlight,
+#network,
+#battery,
+#clock {
+  padding: 0 10px;
+  color: #d4d4d4;
+  background: transparent;
+}
+
+#clock {
+  color: #f0f0f0;
+  padding-right: 14px;
+}
+
+#network.disconnected {
+  color: #6e6e6e;
+}
+
+#pulseaudio.muted {
+  color: #6e6e6e;
+}
+
+/* Battery: grey in normal use, colour only as a signal. -------------------- */
+
+#battery.charging,
+#battery.plugged {
+  color: #8fbf7f;
+}
+
+#battery.warning:not(.charging) {
+  color: #d7a65f;
+}
+
+#battery.critical:not(.charging) {
+  color: #d75f5f;
+}
+
+#tray > .needs-attention {
+  background: #d75f5f;
+}

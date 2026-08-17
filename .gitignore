@@ -1,0 +1,36 @@
+# Temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Backup files
+*.bak
+*.backup
+
+# Personal files
+Pictures/wallpapers/*
+!Pictures/wallpapers/.gitkeep
+
+# Screen captures. This repo is public, and screenshot/recording keybindings
+# write into it easily by accident -- a single `git add -A` would publish
+# whatever was on screen at the time.
+*.mkv
+*.mp4
+*.webm
+*.gif
+*.png
+*.jpg
+*.jpeg
+!screenshots/*.png
+
+# Cache and runtime
+.cache/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Keep directory structure
+!.gitkeep

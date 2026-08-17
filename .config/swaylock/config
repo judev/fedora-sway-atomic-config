@@ -1,0 +1,41 @@
+# swaylock -- overrides /etc/swaylock/config.
+#
+# This is plain swaylock 1.8.5, not swaylock-effects: there is no --screenshots,
+# --effect-blur, --clock or --fade-in. Those options exist only in the
+# swaylock-effects fork, which is not packaged for Fedora. A config that uses
+# them fails to launch, which on a lock screen means the session never locks.
+
+# Solid neutral background rather than an image, matching the rest of the theme.
+color=1a1a1a
+
+# Indicator ring
+indicator
+indicator-radius=90
+indicator-thickness=6
+
+ring-color=3a3a3a
+ring-clear-color=d7a65f
+ring-ver-color=7f9fbf
+ring-wrong-color=d75f5f
+
+inside-color=1a1a1a
+inside-clear-color=1a1a1a
+inside-ver-color=1a1a1a
+inside-wrong-color=1a1a1a
+
+key-hl-color=cdcdcd
+bs-hl-color=d75f5f
+
+text-color=d4d4d4
+text-clear-color=1a1a1a
+text-ver-color=1a1a1a
+text-wrong-color=1a1a1a
+
+separator-color=00000000
+
+# Show that a key registered without revealing the password length.
+indicator-idle-visible
+
+# Do not let a stray keypress on wake dismiss anything; swaylock is
+# fail-secure by default, this just avoids a jarring flash.
+ignore-empty-password

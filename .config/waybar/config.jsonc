@@ -1,0 +1,96 @@
+// Waybar. Started by sway as its bar -- Fedora's
+// /usr/share/sway/config.d/90-bar.conf already sets `swaybar_command waybar`,
+// so there is nothing to autostart.
+//
+// ICONS are written as JSON \uXXXX escapes rather than literal UTF-8, on
+// purpose. The glyphs are Private Use Area codepoints, which are easy to lose
+// to an editor, a copy-paste or a locale mishap -- and when they vanish they
+// leave a plausible-looking empty string rather than an error, so the bar just
+// silently loses its icons. Escapes keep this file pure ASCII.
+//
+// They come from Font Awesome 6 Free *Solid*. Note that the bare family name
+// "Font Awesome 6 Free" resolves to the Regular face, which does NOT contain
+// these glyphs -- style.css must ask for "Font Awesome 6 Free Solid".
+// There is no Nerd Font on this system, so Nerd-Font-only codepoints will not
+// render. Check one before using it:   fc-list ':charset=f240' family style
+{
+  "layer": "top",
+  "position": "top",
+  "height": 28,
+  "spacing": 4,
+
+  "modules-left": ["sway/workspaces", "sway/mode"],
+  "modules-center": ["sway/window"],
+  "modules-right": ["tray", "pulseaudio", "backlight", "network", "battery", "clock"],
+
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "format": "{name}"
+  },
+
+  "sway/mode": {
+    "format": "<b>{}</b>"
+  },
+
+  "sway/window": {
+    "max-length": 90,
+    "tooltip": false
+  },
+
+  "tray": {
+    "icon-size": 16,
+    "spacing": 10
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "\uf6a9 muted",
+    "format-icons": {
+      "headphone": "\uf025",
+      "headset": "\uf025",
+      "default": ["\uf026", "\uf027", "\uf028"]
+    },
+    "on-click": "pavucontrol",
+    "tooltip": false
+  },
+
+  "backlight": {
+    // acpi_video0 is the only backlight this T480 exposes. It has 100 steps,
+    // so brightness changes are coarser than an intel_backlight device.
+    "device": "acpi_video0",
+    "format": "\uf185 {percent}%",
+    "tooltip": false
+  },
+
+  "network": {
+    "format-wifi": "\uf1eb {essid}",
+    "format-ethernet": "\uf6ff wired",
+    "format-disconnected": "\uf1eb offline",
+    "tooltip-format": "{ifname}   {ipaddr}",
+    "on-click": "nm-connection-editor"
+  },
+
+  "battery": {
+    // No "bat" key on purpose. Naming a single battery would misreport on this
+    // machine, which has two packs that discharge in sequence; with auto-detect
+    // waybar aggregates every BAT* it finds. Cross-check against
+    // ~/.config/sway/scripts/battery-notify.sh, which sums them explicitly.
+    "interval": 30,
+    "states": {
+      "warning": 20,
+      "critical": 10
+    },
+    "format": "{icon} {capacity}%",
+    "format-charging": "\uf0e7 {capacity}%",
+    "format-plugged": "\uf1e6 {capacity}%",
+    "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
+    "tooltip-format": "{timeTo}\n{power} W"
+  },
+
+  "clock": {
+    "interval": 30,
+    "format": "{:%a %d %b  %H:%M}",
+    "format-alt": "{:%Y-%m-%d  %H:%M:%S}",
+    "tooltip-format": "<tt>{calendar}</tt>"
+  }
+}
