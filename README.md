@@ -10,8 +10,9 @@ TrackPoint, UK keyboard.
 window management, bar, launcher, terminal, notifications, lock screen and
 screenshots all use what already ships in the Sway Atomic image.
 
-[Screen recording](#screen-recording) is the sole exception and needs two
-layered packages, because the base image has no usable H.264 encoder.
+Two features need layered packages: [screen recording](#screen-recording)
+(two packages, because the base image has no usable H.264 encoder) and
+[clipboard history](#clipboard-history) (one).
 
 ## Install
 
@@ -85,14 +86,17 @@ swayidle block of its own.
 │   │   ├── 55-rules.conf         # floating + idle-inhibit rules
 │   │   ├── 60-bindings-screenshot.conf   # REPLACES Fedora's
 │   │   ├── 62-bindings-record.conf       # screen recording mode
+│   │   ├── 64-clipboard.conf     # clipboard history + Super+V
 │   │   └── 70-lid.conf           # lid switch
 │   └── scripts/
 │       ├── battery-notify.sh     # dual-battery low warning
+│       ├── clipboard.sh          # cliphist + rofi picker
 │       └── record.sh             # wf-recorder wrapper + waybar status
 ├── waybar/{config.jsonc,style.css}
 ├── foot/foot.ini
 ├── rofi/{config.rasi,neutral.rasi}
 ├── dunst/dunstrc
+├── cliphist/config
 └── swaylock/config
 ```
 
@@ -115,6 +119,8 @@ Only the additions are listed. See `/etc/sway/config` for the rest.
 | `Super+Print` | [Screenshot mode](#screenshots) |
 | `Super+Shift+R` | [Recording mode](#screen-recording) |
 | `Super+Shift+S` | Stop recording |
+| `Super+V` | [Clipboard history picker](#clipboard-history) |
+| `Super+Shift+V` | `splitv` — moved off `Super+V` |
 
 ## Screenshots
 
@@ -190,8 +196,7 @@ grimshot check
 
 ## Screen recording
 
-This is the **only** feature the stock image cannot provide, and it needs two
-layered packages:
+Needs two layered packages — the base image has no usable H.264 encoder:
 
 ```bash
 rpm-ostree override remove noopenh264 --install openh264 --install wf-recorder
@@ -274,6 +279,87 @@ pactl unload-module module-null-sink
 
 Audio devices are resolved at runtime via `pactl get-default-sink` rather than
 hardcoded, so they survive hardware and dock changes.
+
+## Clipboard history
+
+Needs one layered package; `wl-clipboard` and `rofi` are already in the image:
+
+```bash
+rpm-ostree install cliphist
+# then reboot
+```
+
+| Binding | Action |
+|---|---|
+| `Super+V` | Open the history picker |
+| `Super+Shift+V` | `splitv` — **moved here** from `Super+V` |
+
+Inside the picker:
+
+| Key | Action |
+|---|---|
+| type anything | fuzzy search (case-insensitive) |
+| `Enter` | copy that entry to the clipboard |
+| `Alt+Delete` | forget that one entry |
+| `Alt+Shift+Delete` | wipe the whole history |
+| `Escape` | cancel |
+
+Delete and wipe live *inside* the picker rather than on global bindings, so you
+are always looking at what you're about to discard.
+
+`Alt+Delete` / `Alt+Shift+Delete` were picked because both are provably free
+among rofi's 102 default bindings. `Shift+Delete` would read better, but it is
+already rofi's own `kb-delete-entry` and duplicate bindings are a hard error —
+and note that `kb-delete-entry` only drops the row from rofi's list, it does not
+touch cliphist's database.
+
+### Secrets
+
+`wl-paste --watch` sets `CLIPBOARD_STATE`, and `clipboard.sh` refuses to store
+anything marked `sensitive`. **This only protects you from applications that set
+the `x-kde-passwordManagerHint` MIME type** — wl-clipboard has no other way to
+know. Check whether a given app does:
+
+```bash
+wl-paste --watch sh -c 'echo "$CLIPBOARD_STATE"'
+# then copy a password in the other app and watch the output
+```
+
+If it prints `data` rather than `sensitive`, that app's secrets *are* being
+stored, and `Alt+Shift+Delete` after the fact is your remedy.
+
+The database is **plaintext** at `~/.cache/cliphist/db`, created mode `0644`.
+It is protected only by `~` being `0700` — nothing about the file itself. Bear
+that in mind before loosening home-directory permissions or backing up
+`~/.cache`.
+
+`~/.config/cliphist/config` bounds the exposure a little: `max-items 500` and
+`min-store-length 3` (which also stops one- and two-character accidents from
+crowding out real entries).
+
+### Three implementation notes
+
+**The watchers use `exec`, not `exec_always`.** They are long-lived daemons that
+must start exactly once per session; `exec_always` would spawn another pair on
+every config reload and each duplicate would re-store every copy. The trade-off
+is that they start on next login rather than on `swaymsg reload` — the config
+file has the one-liner to start them by hand.
+
+**`Super+V` uses `bindsym --no-warn`.** It is the only binding in this config
+that overrides one of Fedora's, and overriding one makes sway raise a swaynag
+banner over the session at every login. `--no-warn` exists for exactly this
+case. Worth knowing: `sway --validate` does **not** catch it — it exits 0 and
+prints nothing, because the warning is raised at runtime rather than during
+parsing. To find overrides, diff your bindings against `/etc/sway/config` and
+`/usr/share/sway/config.d/*.conf` by hand.
+
+**The picker selects by index, not by text.** `cliphist list` rows are
+`"<id>\t<preview>"` and `cliphist decode` needs the id — given only the preview
+it fails outright with `strconv.Atoi ... invalid syntax`. So the picker uses
+`rofi -format i` to get the chosen row's index and looks the row up in the list
+it just generated. That decouples display from lookup entirely, so it cannot
+matter whether `-display-columns 2` returns the whole row or only the visible
+column.
 
 ## Notes
 

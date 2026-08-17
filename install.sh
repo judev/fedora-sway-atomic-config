@@ -45,6 +45,7 @@ PATHS=(
     rofi/config.rasi
     rofi/neutral.rasi
     swaylock/config
+    cliphist/config
 )
 
 ### Sanity checks ############################################################
@@ -94,6 +95,13 @@ elif ! ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc=size=64x64:rate=5
     warn "wf-recorder is installed but libopenh264 cannot encode."
     warn "The noopenh264 stub is probably still in place. Swap it with:"
     warn "  rpm-ostree override remove noopenh264 --install openh264"
+    echo
+fi
+
+# Clipboard history, likewise optional rather than required.
+if ! command -v cliphist >/dev/null 2>&1; then
+    warn "Optional: cliphist not installed -- clipboard history will not work."
+    warn "  rpm-ostree install cliphist   (then reboot)"
     echo
 fi
 

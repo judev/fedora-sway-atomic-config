@@ -1,0 +1,23 @@
+# cliphist storage tunables.
+# One "<key> <value>" per line. See `cliphist -h` or its readme for the full set.
+#
+# The database is PLAINTEXT at $XDG_CACHE_HOME/cliphist/db (~/.cache/cliphist/db).
+# clipboard.sh refuses to store anything wl-paste marks as sensitive, but that
+# only covers applications which set x-kde-passwordManagerHint. Treat this file's
+# database as readable by anything running as your user.
+
+# 750 is the default. 500 still covers weeks of normal use while bounding how
+# much history a single leaked file would expose.
+max-items 500
+
+# Skip one- and two-character copies. They are almost always accidental
+# selections and they crowd out the entries you actually want to find.
+min-store-length 3
+
+# How far back to look when deduplicating, so re-copying the same thing moves it
+# to the top instead of adding a second row.
+max-dedupe-search 200
+
+# Width of the preview text in `cliphist list`. The picker hides the id column,
+# so this is effectively the row width you see in rofi.
+preview-width 120
