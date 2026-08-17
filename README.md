@@ -255,9 +255,12 @@ Check what your machine actually has with `ffmpeg -encoders`.
 
 ### Two things it does not do
 
-**No cursor toggle.** Unlike screenshots, `wf-recorder` 0.6 has no option for
-pointer visibility — nothing in `man wf-recorder`'s option list, and the binary
-calls `zwlr_screencopy_manager_v1` with a hardcoded `overlay_cursor`.
+**Recordings always show the pointer, and it cannot be turned off.**
+`wf-recorder` 0.6 has no cursor option — nothing in its option list, and it
+calls `zwlr_screencopy_manager_v1` with a hardcoded `overlay_cursor`. Confirmed
+by recording with the pointer parked over static content and inspecting an
+extracted frame: the cursor is drawn. Screenshots *can* toggle this
+(`Shift` in the screenshot mode); recordings cannot.
 
 **Mic + system audio needs a mixer.** `wf-recorder -a` takes a *single*
 PulseAudio device, so `narrate` mode builds a null sink fed by two loopbacks and
