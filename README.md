@@ -53,8 +53,11 @@ Don't reimplement these — they're in `/usr/share/sway/config.d/`:
 | `60-bindings-volume.conf` | Volume keys, with an OSD |
 | `60-bindings-brightness.conf` | Brightness keys, with an OSD |
 | `60-bindings-media.conf` | Media keys via `playerctl` |
-| `60-bindings-screenshot.conf` | `Print` / `Alt+Print` / `Ctrl+Print` → save |
 | `50-rules-*.conf` | Browser idle-inhibit, pavucontrol, polkit floating |
+
+One exception: this config **replaces** Fedora's `60-bindings-screenshot.conf`
+with its own file of the same name, so all screenshot behaviour lives in one
+place. See [Screenshots](#screenshots).
 
 `/etc/sway/config` itself defines `$mod`, `$term` (foot), `$menu` (rofi), and
 all the standard bindings: `hjkl` + arrows, workspaces 1–0, splits, layouts,
@@ -74,8 +77,9 @@ swayidle block of its own.
 │   │   ├── 20-appearance.conf    # borders, gaps, colours
 │   │   ├── 25-input.conf         # keyboard (gb), touchpad, TrackPoint
 │   │   ├── 35-bindings.conf      # additions only
-│   │   ├── 45-autostart.conf     # nm-applet, battery notifier
+│   │   ├── 45-autostart.conf     # battery notifier
 │   │   ├── 55-rules.conf         # floating + idle-inhibit rules
+│   │   ├── 60-bindings-screenshot.conf   # REPLACES Fedora's
 │   │   └── 70-lid.conf           # lid switch
 │   └── scripts/
 │       └── battery-notify.sh     # dual-battery low warning
@@ -95,15 +99,86 @@ Only the additions are listed. See `/etc/sway/config` for the rest.
 
 | Binding | Action |
 |---|---|
-| `Super+Shift+X` | Lock (via `loginctl lock-session`) |
+| `Super+Shift+X` | Lock (`swaylock -f`, falling back to `loginctl lock-session`) |
 | `Super+Shift+P` | Session menu — lock / suspend / log out / reboot / shut down |
 | `Super+Shift+Return` | Thunar |
 | `Super+N` | Toggle waybar |
 | `Super+Tab` | Last workspace |
 | `Super+Ctrl+←/→` | Previous / next workspace |
-| `Super+Print` | Copy screenshot of output |
-| `Super+Shift+Print` | Copy screenshot of selection |
-| `Super+Ctrl+Print` | Copy screenshot of active window |
+| `Print` | Screenshot: region → clipboard |
+| `Super+Print` | Screenshot mode — see below |
+
+## Screenshots
+
+All of this is [`grimshot`](https://github.com/swaywm/sway/blob/master/contrib/grimshot),
+which ships with `sway-config-fedora` and wraps `grim` + `slurp` + `wl-copy`.
+Nothing extra to install. Defined in `60-bindings-screenshot.conf`.
+
+### The common case
+
+```
+Print        drag out a region  →  clipboard
+```
+
+### Everything else: `Super+Print`
+
+That enters a **screenshot mode**. Waybar's `sway/mode` module displays
+`screenshot` in the bar while it is active, so you can see you're in it. Then
+one key picks the target:
+
+| Key | Captures |
+|---|---|
+| `a` | **area** — drag out a region |
+| `w` | **window** — click one to pick it |
+| `o` | **output** — the current display, whole |
+| `s` | **screen** — every visible output (same as `o` on one display) |
+| `f` | **focused** — the active window, no clicking |
+
+Modifiers compose with any of those:
+
+| Modifier | Effect |
+|---|---|
+| *(none)* | clipboard only |
+| `Shift` | **include the mouse pointer** (`grimshot --cursor`) |
+| `Ctrl` | also write a file (`grimshot savecopy` — file *and* clipboard) |
+| `Ctrl+Shift` | pointer **and** a file |
+
+`Escape`, `Return` or `Super+Print` again leaves the mode without capturing.
+
+So `Super+Print` then `Shift+a` is "drag a region, include the pointer, put it
+on the clipboard"; `Ctrl+Shift+f` is "the focused window with its pointer, saved
+to disk and copied".
+
+### Where files go
+
+Only the `Ctrl` variants write to disk. The target is grimshot's default —
+`$XDG_SCREENSHOTS_DIR`, else `$XDG_PICTURES_DIR`, else `$HOME`, read from
+`~/.config/user-dirs.dirs`. Here that resolves to `~/Pictures`.
+
+To keep them in a subfolder, add this to `~/.config/user-dirs.dirs` and create
+the directory:
+
+```
+XDG_SCREENSHOTS_DIR="$HOME/Pictures/Screenshots"
+```
+
+Filenames are grimshot's own ISO-8601 form, e.g.
+`2026-08-17T14:28:54,535384572+01:00.png`. The colons and nanoseconds are
+awkward but are grimshot's default, not something this config sets; changing
+them means wrapping the `savecopy` bindings in a shell command that builds its
+own filename.
+
+### Note on `Print`
+
+Fedora's default binds bare `Print` to *save the whole output to a file*. This
+config rebinds it to *region → clipboard*, on the grounds that it is the far
+more common action. `Super+Print` then `Ctrl+o` is the old behaviour.
+
+Check grimshot's dependencies at any time with:
+
+```bash
+grimshot check
+```
 
 ## Notes
 
@@ -125,8 +200,25 @@ against the script's figure if the numbers ever look wrong.
 
 ### Icons
 
-Waybar's glyphs are **Font Awesome 6 Free**, which is in the base image. There
-is no Nerd Font installed; Nerd-Font-only codepoints render as tofu.
+Waybar's glyphs come from **Font Awesome 6 Free**, which is in the base image.
+There is no Nerd Font installed, so Nerd-Font-only codepoints render as tofu.
+
+Two traps worth knowing, both of which make icons vanish *silently* rather than
+erroring:
+
+1. `style.css` must ask for the family **`Font Awesome 6 Free Solid`**, not
+   `Font Awesome 6 Free`. The bare name resolves to the *Regular* face, which
+   does not contain the icons used here.
+2. `config.jsonc` writes the glyphs as JSON `\uXXXX` escapes, keeping the file
+   pure ASCII. They are Private Use Area codepoints, easily lost to an editor or
+   a copy-paste — and when they disappear they leave a plausible-looking empty
+   string, so the bar just quietly loses its icons.
+
+Check that a codepoint exists before using it:
+
+```bash
+fc-list ':charset=f240' family style
+```
 
 ### GTK theming
 
