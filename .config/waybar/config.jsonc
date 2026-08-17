@@ -21,7 +21,7 @@
 
   "modules-left": ["sway/workspaces", "sway/mode"],
   "modules-center": ["sway/window"],
-  "modules-right": ["tray", "pulseaudio", "backlight", "network", "battery", "clock"],
+  "modules-right": ["custom/recording", "tray", "pulseaudio", "backlight", "network", "battery", "clock"],
 
   "sway/workspaces": {
     "disable-scroll": true,
@@ -35,6 +35,23 @@
   "sway/window": {
     "max-length": 90,
     "tooltip": false
+  },
+
+  // Recording indicator. Hidden entirely when not recording: record.sh
+  // returns an empty "text", and "format" is a bare passthrough so nothing
+  // is rendered. The icon deliberately comes from the script, not from
+  // "format" -- an icon in "format" would still be drawn when text is empty,
+  // leaving a stray dot in the bar while idle.
+  //
+  // signal 9 = SIGRTMIN+9, which record.sh raises on start and stop so the
+  // indicator flips immediately instead of waiting for the next poll.
+  "custom/recording": {
+    "exec": "$HOME/.config/sway/scripts/record.sh status",
+    "return-type": "json",
+    "interval": 2,
+    "signal": 9,
+    "format": "{}",
+    "on-click": "$HOME/.config/sway/scripts/record.sh stop"
   },
 
   "tray": {

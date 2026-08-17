@@ -81,6 +81,22 @@ if (( ${#missing[@]} )); then
     echo
 fi
 
+# Screen recording is the one feature the stock image cannot satisfy, so it is
+# checked separately: everything else above is a hard requirement, this is not.
+if ! command -v wf-recorder >/dev/null 2>&1; then
+    warn "Optional: wf-recorder not installed -- screen recording will not work."
+    warn "  rpm-ostree override remove noopenh264 --install openh264 --install wf-recorder"
+    warn "  (then reboot). openh264 must be an override, not a plain install:"
+    warn "  the base image ships noopenh264, a stub that cannot encode."
+    echo
+elif ! ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc=size=64x64:rate=5 \
+        -t 0.2 -c:v libopenh264 -f null - >/dev/null 2>&1; then
+    warn "wf-recorder is installed but libopenh264 cannot encode."
+    warn "The noopenh264 stub is probably still in place. Swap it with:"
+    warn "  rpm-ostree override remove noopenh264 --install openh264"
+    echo
+fi
+
 ### Install ##################################################################
 
 BACKUP="$HOME/.config-backup-$(date +%Y%m%d-%H%M%S)"

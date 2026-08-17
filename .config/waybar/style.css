@@ -119,3 +119,23 @@ window#waybar.empty #window {
 #tray > .needs-attention {
   background: #d75f5f;
 }
+
+/* Recording indicator -------------------------------------------------------
+ *
+ * The one place a saturated colour is justified: an unnoticed recording fills
+ * the disk and captures whatever happens to be on screen. It should be the
+ * loudest thing in the bar. */
+
+#custom-recording {
+  padding: 0 10px;
+  color: #f0f0f0;
+  background: #c0392b;
+  font-weight: bold;
+}
+
+/* The module reports an empty string when idle; collapse its padding so no
+ * stray gap is left in the bar. */
+#custom-recording.idle {
+  padding: 0;
+  background: transparent;
+}

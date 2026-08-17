@@ -6,8 +6,12 @@ own config rather than as a replacement for it.
 Targeted at a **ThinkPad T480**: single 1920×1080 internal panel, dual battery,
 TrackPoint, UK keyboard.
 
-**Requires zero `rpm-ostree` layering.** Everything it uses already ships in the
-Sway Atomic image.
+**Requires zero `rpm-ostree` layering** for everything except screen recording —
+window management, bar, launcher, terminal, notifications, lock screen and
+screenshots all use what already ships in the Sway Atomic image.
+
+[Screen recording](#screen-recording) is the sole exception and needs two
+layered packages, because the base image has no usable H.264 encoder.
 
 ## Install
 
@@ -80,9 +84,11 @@ swayidle block of its own.
 │   │   ├── 45-autostart.conf     # battery notifier
 │   │   ├── 55-rules.conf         # floating + idle-inhibit rules
 │   │   ├── 60-bindings-screenshot.conf   # REPLACES Fedora's
+│   │   ├── 62-bindings-record.conf       # screen recording mode
 │   │   └── 70-lid.conf           # lid switch
 │   └── scripts/
-│       └── battery-notify.sh     # dual-battery low warning
+│       ├── battery-notify.sh     # dual-battery low warning
+│       └── record.sh             # wf-recorder wrapper + waybar status
 ├── waybar/{config.jsonc,style.css}
 ├── foot/foot.ini
 ├── rofi/{config.rasi,neutral.rasi}
@@ -106,7 +112,9 @@ Only the additions are listed. See `/etc/sway/config` for the rest.
 | `Super+Tab` | Last workspace |
 | `Super+Ctrl+←/→` | Previous / next workspace |
 | `Print` | Screenshot: region → clipboard |
-| `Super+Print` | Screenshot mode — see below |
+| `Super+Print` | [Screenshot mode](#screenshots) |
+| `Super+Shift+R` | [Recording mode](#screen-recording) |
+| `Super+Shift+S` | Stop recording |
 
 ## Screenshots
 
@@ -179,6 +187,90 @@ Check grimshot's dependencies at any time with:
 ```bash
 grimshot check
 ```
+
+## Screen recording
+
+This is the **only** feature the stock image cannot provide, and it needs two
+layered packages:
+
+```bash
+rpm-ostree override remove noopenh264 --install openh264 --install wf-recorder
+# then reboot
+```
+
+`openh264` must go in as an **override**, not a plain `install`. The base image
+ships `noopenh264` — a stub that satisfies the same soname but refuses to encode
+(*"Unable to create encoder"*). `openh264` `Obsoletes:` it, and swapping a
+base-image package is what `override remove` is for. It comes from the
+`fedora-cisco-openh264` repo, enabled by default.
+
+### Bindings
+
+| Binding | Action |
+|---|---|
+| `Super+Shift+R` | Enter **recording mode** |
+| `Super+Shift+S` | **Stop** recording (works anywhere, including while locked) |
+
+Inside the mode, the target:
+
+| Key | Records |
+|---|---|
+| `r` | **region** — drag one out with slurp |
+| `o` | **output** — the focused display |
+| `s` | **screen** — everything |
+
+…and the modifier picks the audio:
+
+| Modifier | Audio |
+|---|---|
+| *(none)* | system audio — the default sink's monitor |
+| `Shift` | silent |
+| `Ctrl` | **narrate** — system audio and microphone, mixed |
+
+`Escape` leaves without recording. Output goes to `$XDG_VIDEOS_DIR`
+(`~/Videos`) as `2026-08-17-143205.mp4`.
+
+While recording, waybar shows a red **REC** indicator; click it to stop.
+
+### Why the codecs are pinned
+
+`wf-recorder` defaults to `libx264`, which **does not exist on this system**.
+Verified on a T480 running stock Sway Atomic:
+
+| Encoder | Status |
+|---|---|
+| `libx264` / `libx265` | absent — the image ships `ffmpeg-free` |
+| `libopenh264` | advertised, but the `noopenh264` stub cannot encode |
+| `h264_vaapi` | Fedora strips H.264 encode from `libva-intel-media-driver` |
+| `vp9_vaapi` | UHD 620 has VP9 *decode* only, no encode silicon |
+| `libvpx-vp9` (software) | works — 5s of 1080p30 in 1.7s, ~3× realtime |
+
+So there is **no hardware encode path at all** here, and the default would just
+fail. `record.sh` pins `-c libopenh264 -C aac -x yuv420p` explicitly. If you
+skip the `openh264` override, switch `VIDEO_CODEC` in `record.sh` to
+`libvpx-vp9` and the extension to `.webm` — software VP9 has ample headroom on
+this CPU.
+
+Check what your machine actually has with `ffmpeg -encoders`.
+
+### Two things it does not do
+
+**No cursor toggle.** Unlike screenshots, `wf-recorder` 0.6 has no option for
+pointer visibility — nothing in `man wf-recorder`'s option list, and the binary
+calls `zwlr_screencopy_manager_v1` with a hardcoded `overlay_cursor`.
+
+**Mic + system audio needs a mixer.** `wf-recorder -a` takes a *single*
+PulseAudio device, so `narrate` mode builds a null sink fed by two loopbacks and
+records its monitor. `record.sh` tracks the module IDs and unloads them on stop;
+if a recording is killed uncleanly you may be left with a stray
+`RecordingMix` output device, removable with:
+
+```bash
+pactl unload-module module-null-sink
+```
+
+Audio devices are resolved at runtime via `pactl get-default-sink` rather than
+hardcoded, so they survive hardware and dock changes.
 
 ## Notes
 
