@@ -90,6 +90,10 @@ if ! command -v wf-recorder >/dev/null 2>&1; then
     warn "  (then reboot). openh264 must be an override, not a plain install:"
     warn "  the base image ships noopenh264, a stub that cannot encode."
     echo
+elif ! command -v ffmpeg >/dev/null 2>&1; then
+    warn "wf-recorder is installed but ffmpeg is not on PATH, so the openh264"
+    warn "encoder could not be verified. Recording may still work."
+    echo
 elif ! ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc=size=64x64:rate=5 \
         -t 0.2 -c:v libopenh264 -f null - >/dev/null 2>&1; then
     warn "wf-recorder is installed but libopenh264 cannot encode."
@@ -122,7 +126,7 @@ for rel in "${PATHS[@]}"; do
     if [[ "$MODE" == check ]]; then
         if [[ -L "$dst" && "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
             green "ok       $rel"
-        elif [[ -e "$dst" ]]; then
+        elif [[ -e "$dst" || -L "$dst" ]]; then
             warn  "replace  $rel"
         else
             green "create   $rel"
