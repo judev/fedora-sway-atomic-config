@@ -371,6 +371,31 @@ default, so a machine correctly set to `gb` via `localectl` still comes up US
 inside sway. The layout is set explicitly in `25-input.conf`; change it there
 as well as with `localectl`.
 
+### Shift+Return in the terminal
+
+foot cannot distinguish `Shift+Return` from plain `Return` — both arrive as a
+bare CR — so a program that wants the two to mean different things sees only
+one key. Claude Code is the case in point: `Shift+Return` should insert a
+newline instead of submitting. The `[text-bindings]` section in `foot.ini`
+maps it to `ESC CR`, the sequence `Alt+Return` normally sends, which such
+programs already read as "insert a newline".
+
+Two constraints:
+
+1. Escapes must be **two-digit hex with an `\x` prefix**. `\x1b\r` is rejected
+   at parse time with `invalid escaped character: r`; write `\x1b\x0d`.
+2. The binding is global to foot. Every program sees `ESC CR` on
+   `Shift+Return`, not only the one it was added for.
+
+Terminals that speak the kitty keyboard protocol (kitty, ghostty, wezterm)
+report the modifier natively and need no mapping, but of those only `kitty` is
+in the Fedora repos — the others need a COPR or Flatpak. Swapping terminal is
+also more than a package install: `$mod+Return` is bound at
+`/etc/sway/config:74`, *before* the `config.d` include on line 228, so sway has
+already expanded `$term` to `foot` by the time these drop-ins are read. Setting
+`$term` in `05-variables.conf` would do nothing; it needs an explicit
+`bindsym $mod+Return exec <terminal>` in `35-bindings.conf`.
+
 ### Dual battery
 
 The T480 has two packs (`BAT0` internal, `BAT1` hot-swap) that discharge in
